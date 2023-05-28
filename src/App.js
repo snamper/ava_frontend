@@ -1,17 +1,18 @@
-import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
+import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import Home from './components/Home';
 import Login from './components/Login';
 import Register from './components/Register'
+import VoiceRecorder from './components/VoiceRecorder';
 function App() {
   return (
     <Router>
-    <Switch>
-      <Route path='/' exact Component={Home}/>
-      <Route path='/login' exact Component={Login}/>
-      <Route path='/register' exact Component={Register}/>
+    <Routes>
+      <Route path='/' exact element={<Home/>}/>
+      {/* <Route path='/login' exact element={Login}/> */}
+      {/* <Route path='/register' exact element={Register}/> */}
       {/* 404 page ? */}
       
-    </Switch>
+    </Routes>
     </Router>
   );
 }

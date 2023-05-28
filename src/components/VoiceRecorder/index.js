@@ -1,42 +1,42 @@
-import React, {useState, useRef} from 'react';
+import { useReactMediaRecorder } from "react-media-recorder";
+import axios from 'axios';
+import { useEffect, useState } from "react";
 
-const VoiceRecorder=()=>{
-    const [recording, setRecording] = useState(false);
-    const [audioUrl, SetAudioUrl] = useState('');
-    const audioChunks = useRef([]);
-    const mediaRecorder = useRef(null);
+const VoiceRecorder = () => {
+    const { status, startRecording, stopRecording, mediaBlobUrl } =
+    useReactMediaRecorder({ audio: true, mimeType: 'audio/wav' });
+    const [audioBlob, setAudioBlob] = useState(null);
 
-    const startRecording = async() => {
-        const stream = await navigator.mediaDevices.getUserMedia({audio: true});
-        mediaRecorder.current = new MediaRecorder(stream);
-        mediaRecorder.current.addEventListener('dataavailable', (e)=>{
-            audioChunks.current.push(e.data);
-        });
+    useEffect(()=>{
+        if(mediaBlobUrl){
+            fetch(mediaBlobUrl)
+                .then(res => res.blob())
+                    .then(setAudioBlob)
+        }
+    }, [mediaBlobUrl])
+    const stopAndSend = async ()=>{
+        if(audioBlob){
+            console.log(audioBlob);
 
-        mediaRecorder.addEventListener('stop', ()=>{
-            const audioBlob = new Blob(audioChunks.current);
-            SetAudioUrl(URL.createObjectURL(audioBlob));
-            // send to server
-        });
-        setRecording(true);
-        mediaRecorder.current.start();
-    };
-
-    const stopRecording = () => {
-        setRecording(false);
-        mediaRecorder.current.stop();
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'audio.wav');
+            axios.post('http://localhost:5000/api/openai/transcribe', formData,{
+                headers:{'Content-Type': 'multipart/form-data'}
+            }).then((response)=>{
+                console.log(response);
+            }).catch((err)=>{
+                console.error(err);
+            })
+        }
     }
-
-    return(
-        <div>
-            <button onClick={startRecording} disabled={recording}>
-                Start Recording
-            </button>
-            <button onClick={stopRecording} disabled={!recording}>
-                Stop Recording
-            </button>
-            <audio src={audioUrl} controls />
-        </div>
-    )
-}
+    return (
+    <div>
+        <p>{status}</p>
+        <button onClick={startRecording}>Start Recording</button>
+        <button onClick={stopRecording}>Stop Recording</button>
+        <button onClick={stopAndSend}>Send Recording</button>
+        <audio src={mediaBlobUrl} controls  />
+    </div>
+    );
+};
 export default VoiceRecorder;
