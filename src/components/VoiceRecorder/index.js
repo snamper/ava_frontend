@@ -1,12 +1,19 @@
 import { useReactMediaRecorder } from "react-media-recorder";
 import axios from 'axios';
 import { useEffect, useState } from "react";
-
+import MicIcon from '@mui/icons-material/Mic';
+import StopIcon from '@mui/icons-material/Stop';
+import SendIcon from '@mui/icons-material/Send';
 const VoiceRecorder = () => {
     const { status, startRecording, stopRecording, mediaBlobUrl } =
     useReactMediaRecorder({ audio: true, mimeType: 'audio/wav' });
     const [audioBlob, setAudioBlob] = useState(null);
-
+    const [isRecording, setIsRecording]= useState(false);
+    const startStopRecording=()=>{
+        if(isRecording) stopRecording();
+        else startRecording();
+        setIsRecording(!isRecording);
+    }
     useEffect(()=>{
         if(mediaBlobUrl){
             fetch(mediaBlobUrl)
@@ -30,12 +37,20 @@ const VoiceRecorder = () => {
         }
     }
     return (
-    <div>
-        <p>{status}</p>
-        <button onClick={startRecording}>Start Recording</button>
-        <button onClick={stopRecording}>Stop Recording</button>
-        <button onClick={stopAndSend}>Send Recording</button>
+    <div className=" relative flex items-center justify-center min-h-screen bg-slate-900 text-white ">
+    <div className="absolute bottom-6 flex items-center justify-center space-x-4 p-4 rounded-2xl bg-white text-slate-800">
+    
+            <MicIcon 
+                onClick={startStopRecording} 
+                style={{ fontSize: 30, color: isRecording ? 'red' : 'black' }} 
+            />
+            
+        <div className="absolute  p-4 text-center bg-white text-slate-800 rounded-2xl">
+        <p >{status}</p>
+        </div>
         <audio src={mediaBlobUrl} controls  />
+        <SendIcon onClick={stopAndSend} style={{ fontSize: 30 }} />
+    </div>
     </div>
     );
 };
