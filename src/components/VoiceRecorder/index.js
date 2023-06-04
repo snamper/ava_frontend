@@ -37,8 +37,8 @@ const VoiceRecorder = () => {
         }
     }
     return (
-    <div className=" relative flex items-center justify-center min-h-screen bg-slate-900 text-white ">
-    <div className="absolute bottom-6 flex items-center justify-center space-x-4 p-4 rounded-2xl bg-white text-slate-800">
+    <div className=" relative flex items-center justify-center h-40  ">
+    <div className="absolute top-6 flex items-center justify-center space-x-4 p-4 rounded-2xl bg-white text-slate-800">
     
             <MicIcon 
                 onClick={startStopRecording} 
@@ -49,7 +49,9 @@ const VoiceRecorder = () => {
         <p >{status}</p>
         </div>
         <audio src={mediaBlobUrl} controls  />
-        <SendIcon onClick={stopAndSend} style={{ fontSize: 30 }} />
+        <SendIcon onClick={()=>{
+            console.log('send clicked')
+            stopAndSend();}} style={{ fontSize: 30 }} />
     </div>
     </div>
     );

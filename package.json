@@ -7,6 +7,9 @@
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.2",
+    "@react-three/drei": "^9.70.0",
+    "@react-three/fiber": "^8.13.0",
+    "@readyplayerme/visage": "^3.6.1",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -16,6 +19,10 @@
     "react-media-recorder": "^1.6.6",
     "react-router-dom": "^6.11.2",
     "react-scripts": "5.0.1",
+    "socket.io-client": "^4.6.2",
+    "suspend-react": "^0.0.10",
+    "three": "^0.152.2",
+    "three-stdlib": "^2.23.4",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
