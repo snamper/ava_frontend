@@ -1,12 +1,14 @@
 import React from 'react'
 import VoiceRecorder from '../VoiceRecorder'
 import RPM from '../RPM'
+import AvaterScene from '../AvatarView/AvatarScene'
 function index() {
   return (
-    <div className=' min-h-screen text-white'>
+    <div>
     <VoiceRecorder />
-    <RPM />
+    {/* <RPM /> */}
     {/* <VoiceRecorder /> */}
+    <AvaterScene/>
     </div>
   )
 }

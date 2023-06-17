@@ -37,8 +37,8 @@ const VoiceRecorder = () => {
         }
     }
     return (
-    <div className=" relative flex items-center justify-center h-40  ">
-    <div className="absolute top-6 flex items-center justify-center space-x-4 p-4 rounded-2xl bg-white text-slate-800">
+    <div className=" absolute flex items-center justify-center h-40 bottom-2 left-1/2 ">
+    <div className="absolute  flex items-center justify-center space-x-4 p-4 rounded-2xl bg-white text-slate-800">
     
             <MicIcon 
                 onClick={startStopRecording} 
