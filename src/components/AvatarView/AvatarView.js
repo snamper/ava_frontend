@@ -4,47 +4,130 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import * as Tween from '@tweenjs/tween.js';
+import MorphTargetAnimator from './MorphTargetAnimator.js';
 
-import {io} from 'socket.io-client';const navigationBarHeight = 100
-const SCALE = 7.5
-const visemeMapping = {
-    0: 'viseme_sil', // Silence
-    1: 'viseme_E', // æ, ə, ʌ
-    2: 'viseme_aa', // ɑ
-    3: 'viseme_O', // ɔ
-    4: 'viseme_E', // ɛ, ʊ
-    5: 'viseme_RR', // ɝ
-    6: 'viseme_I', // j, i, ɪ
-    7: 'viseme_U', // w, u
-    8: 'viseme_O', // o
-    9: 'viseme_aa', // aʊ
-    10: 'viseme_O', // ɔɪ
-    11: 'viseme_aa', // aɪ
-    12: 'viseme_E', // h
-    13: 'viseme_RR', // ɹ
-    14: 'viseme_E', // l
-    15: 'viseme_SS', // s, z
-    16: 'viseme_CH', // ʃ, tʃ, dʒ, ʒ
-    17: 'viseme_TH', // ð
-    18: 'viseme_FF', // f, v
-    19: 'viseme_DD', // d, t, n, θ
-    20: 'viseme_kk', // k, g, ŋ
-    21: 'viseme_PP', // p, b, m
-    22: 'viseme_nn',
-    23: 'mouthOpen',
-    24: 'mouthSmile',
-    25: 'eyesClosed',
-    26: 'eyesLookUp',
-    27: 'eyesLookDown'
+import {io} from 'socket.io-client';
+const navigationBarHeight = 100
+const frameDelayInMs = 1000 / 60;  // Approximately 16.67ms
+const frameDelayInTicks = frameDelayInMs * 10;
+const blendShapeMapping = {
+    eyeBlinkLeft: 'eyeBlinkLeft',
+    eyeLookDownLeft: 'eyeLookDownLeft',
+    eyeLookInLeft: 'eyeLookInLeft',
+    eyeLookOutLeft: 'eyeLookOutLeft',
+    eyeLookUpLeft: 'eyeLookUpLeft',
+    eyeSquintLeft: 'eyeSquintLeft',
+    eyeWideLeft: 'eyeWideLeft',
+    eyeBlinkRight: 'eyeBlinkRight',
+    eyeLookDownRight: 'eyeLookDownRight',
+    eyeLookInRight: 'eyeLookInRight',
+    eyeLookOutRight: 'eyeLookOutRight',
+    eyeLookUpRight: 'eyeLookUpRight',
+    eyeSquintRight: 'eyeSquintRight',
+    eyeWideRight: 'eyeWideRight',
+    jawForward: 'jawForward',
+    jawLeft: 'jawLeft',
+    jawRight: 'jawRight',
+    jawOpen: 'jawOpen',
+    mouthClose: 'mouthClose',
+    mouthFunnel: 'mouthFunnel',
+    mouthPucker: 'mouthPucker',
+    mouthLeft: 'mouthLeft',
+    mouthRight: 'mouthRight',
+    mouthSmileLeft: 'mouthSmileLeft',
+    mouthSmileRight: 'mouthSmileRight',
+    mouthFrownLeft: 'mouthFrownLeft',
+    mouthFrownRight: 'mouthFrownRight',
+    mouthDimpleLeft: 'mouthDimpleLeft',
+    mouthDimpleRight: 'mouthDimpleRight',
+    mouthStretchLeft: 'mouthStretchLeft',
+    mouthStretchRight: 'mouthStretchRight',
+    mouthRollLower: 'mouthRollLower',
+    mouthRollUpper: 'mouthRollUpper',
+    mouthShrugLower: 'mouthShrugLower',
+    mouthShrugUpper: 'mouthShrugUpper',
+    mouthPressLeft: 'mouthPressLeft',
+    mouthPressRight: 'mouthPressRight',
+    mouthLowerDownLeft: 'mouthLowerDownLeft',
+    mouthLowerDownRight: 'mouthLowerDownRight',
+    mouthUpperUpLeft: 'mouthUpperUpLeft',
+    mouthUpperUpRight: 'mouthUpperUpRight',
+    browDownLeft: 'browDownLeft',
+    browDownRight: 'browDownRight',
+    browInnerUp: 'browInnerUp',
+    browOuterUpLeft: 'browOuterUpLeft',
+    browOuterUpRight: 'browOuterUpRight',
+    cheekPuff: 'cheekPuff',
+    cheekSquintLeft: 'cheekSquintLeft',
+    cheekSquintRight: 'cheekSquintRight',
+    noseSneerLeft: 'noseSneerLeft',
+    noseSneerRight: 'noseSneerRight',
+    tongueOut: 'tongueOut'
+    // headRoll, leftEyeRoll, and rightEyeRoll are missing from the avatar dictionary, hence they are omitted here
 };
+
+const blendShapeKeysARKit = [
+    'eyeBlinkLeft',
+    'eyeLookDownLeft',
+    'eyeLookInLeft',
+    'eyeLookOutLeft',
+    'eyeLookUpLeft',
+    'eyeSquintLeft',
+    'eyeWideLeft',
+    'eyeBlinkRight',
+    'eyeLookDownRight',
+    'eyeLookInRight',
+    'eyeLookOutRight',
+    'eyeLookUpRight',
+    'eyeSquintRight',
+    'eyeWideRight',
+    'jawForward',
+    'jawLeft',
+    'jawRight',
+    'jawOpen',
+    'mouthClose',
+    'mouthFunnel',
+    'mouthPucker',
+    'mouthLeft',
+    'mouthRight',
+    'mouthSmileLeft',
+    'mouthSmileRight',
+    'mouthFrownLeft',
+    'mouthFrownRight',
+    'mouthDimpleLeft',
+    'mouthDimpleRight',
+    'mouthStretchLeft',
+    'mouthStretchRight',
+    'mouthRollLower',
+    'mouthRollUpper',
+    'mouthShrugLower',
+    'mouthShrugUpper',
+    'mouthPressLeft',
+    'mouthPressRight',
+    'mouthLowerDownLeft',
+    'mouthLowerDownRight',
+    'mouthUpperUpLeft',
+    'mouthUpperUpRight',
+    'browDownLeft',
+    'browDownRight',
+    'browInnerUp',
+    'browOuterUpLeft',
+    'browOuterUpRight',
+    'cheekPuff',
+    'cheekSquintLeft',
+    'cheekSquintRight',
+    'noseSneerLeft',
+    'noseSneerRight',
+    'tongueOut'
+  ];
 export class AvatarView extends React.Component{
     mainViewRef = React.createRef()
-    state = {
-        visemeInfluences: new Array(28).fill(0), // 28 is the new number of visemes and blend shapes
-        morphTargets: {} 
-    }
-    clock = new THREE.Clock();
     mixer = null;
+    currentTween = null;
+    currentMorphTargetIndex = undefined;
+    clock = new THREE.Clock();
+    audio = null;
+    blendShapeIndices = {};
     async componentDidMount(){
         const mainView = this.mainViewRef.current
         this.renderer= new THREE.WebGL1Renderer({antialias: true})
@@ -65,42 +148,51 @@ export class AvatarView extends React.Component{
         this.loadModel()
         this.renderer.setAnimationLoop(this.renderScene.bind(this))
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.socket.on('audioData', (audioData) => {
-            const blob = new Blob([audioData], {type: 'audio/wav'});
+        this.socket.on('audioData', (audioDataArray) => {
+            const blob = new Blob([new Uint8Array(audioDataArray)], {type: 'audio/wav'});
             const url = URL.createObjectURL(blob);
-            const audio = new Audio(url);
-            audio.onloadeddata = () => {
-                console.log('playing audio');
-                audio.play();
+            this.audio = new Audio(url);  // ADJUSTED: Assign audio to a class member
+            this.audio.onloadeddata = () => {
+                this.audio.play();
             };
-            audio.onerror = (error) => {
+            this.audio.onerror = (error) => {
                 console.error("Error playing audio:", error);
             };
-        });
-        
-        
-      
-        
+        }); 
         
     }
     async loadModel() {
-        const gltf = await this.loadGLTF(this.props.avatarUrl + '?morphTargets=mouthOpen,eyesClosed,eyesLookUp,mouthSmile,eyesLookDown,Oculus Visemes')
+        const gltf = await this.loadGLTF(this.props.avatarUrl + '?morphTargets=ARKit')
         this.avatar = gltf.scene.children[0];
         this.mixer = new THREE.AnimationMixer(this.avatar);
     
+ 
+    
         this.avatar.traverse((object) => {
             if (object.isMesh && object.morphTargetDictionary) {
-                // const morphTargetIndex = object.morphTargetDictionary["viseme_nn"]; // Try a different morph target
-                // if (morphTargetIndex !== undefined) {
-                //     object.morphTargetInfluences[morphTargetIndex] = 1;
-                // }
                 console.log("dictionary :", object.morphTargetDictionary);
                 console.log("influences : ", object.morphTargetInfluences)
+                Object.keys(object.morphTargetDictionary).forEach(key => {
+                    this.blendShapeIndices[key] = object.morphTargetDictionary[key];
+                  });
+            
             }
         });
-        
+    
         this.avatar.position.set(-6, -2, 3);
         this.scene.add(this.avatar);
+        this.mixer = new THREE.AnimationMixer(this.avatar);
+    }
+    componentWillUnmount() {
+        // Cleanup resources
+        this.renderer.dispose();
+        if (this.audioContext) {
+            this.audioContext.close();
+        }
+        if (this.socket) {
+            this.socket.close();
+        }
+        this.renderer.setAnimationLoop(null);
     }
     async componentDidUpdate(oldProps) {
         if(this.props?.avatarUrl && this.props?.avatarUrl !==  oldProps?.avatarUrl)  {
@@ -108,87 +200,74 @@ export class AvatarView extends React.Component{
         }  
         this.renderer.domElement.style.cssText = `display: ${this.props.showIFrame ? 'none' : 'block'}`
     }
-    handleVisemeReceived = (viseme) => {
-        var delay = viseme.audioOffset / 1000000;
-        setTimeout(() => {
-            this.animateViseme(viseme);
-        }, delay);
+    parseAnimationJson = (animationJson) => {
+        // If the animationJson is not a string or is an empty string, return null
+        if (typeof animationJson !== 'string' || animationJson.trim() === '') {
+            return null;
+        }
+    
+        // Try to parse the JSON and return the result
+        try {
+            return JSON.parse(animationJson);
+        } catch (error) {
+            console.error('Error parsing animation JSON:', error);
+            return null;
+        }
     }
-    
-    
-    updateMorphTargetInfluences() {
-        this.avatar.traverse((object) => {
-            if (object.isMesh && object.morphTargetDictionary) {
-                // Gradually interpolate the morph target influences
-                for (let i = 0; i < object.morphTargetInfluences.length; i++) {
-                    object.morphTargetInfluences[i] += (this.state.visemeInfluences[i] - object.morphTargetInfluences[i]) * 0.1;
-                }
-            }
+    handleVisemeReceived = (visemeData) => {
+        console.log('received viseme');
+        const animationObject = this.parseAnimationJson(visemeData.animation);
+
+        if (animationObject === null) {
+            return;
+        }
+
+        const audioOffsetInMs = visemeData.audioOffset / 100000 ;
+
+        animationObject.BlendShapes.forEach((blendShapeFrame, index) => {
+            const delay = audioOffsetInMs + index * frameDelayInMs;
+
+            // ADJUSTED: Pass the audio reference to animateViseme
+            setTimeout(() => this.animateViseme(blendShapeFrame, this.audio), delay);
         });
     }
-    base64ToArrayBuffer(base64){
-        const binaryString = window.atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
-    }
-    animateViseme(viseme) {
-        console.log('Applying viseme:', viseme);
-    
-        // Get the morph target name based on the viseme id
-        const morphTargetName = visemeMapping[viseme.visemeId];
-    
+
+    animateViseme(blendShapeFrame) {
+        
+        let missingBlendshapeCounts = {};
+
+        // Traverse avatar object
         this.avatar.traverse((object) => {
             if (object.isMesh && object.morphTargetDictionary) {
-                // Reset all the viseme morph targets to 0
-                for (let morphTarget in object.morphTargetDictionary) {
-                    if (morphTarget.startsWith("viseme_") || 
-                        morphTarget === "mouthOpen" || 
-                        morphTarget === "mouthSmile" || 
-                        morphTarget === "eyesClosed" ||
-                        morphTarget === "eyesLookUp" ||
-                        morphTarget === "eyesLookDown") {
-                        let index = object.morphTargetDictionary[morphTarget];
-                        object.morphTargetInfluences[index] = 0;
-                    }
+              blendShapeFrame.forEach((value, index) => {
+                const key = blendShapeKeysARKit[index];  // Get key from ARKit
+      
+                if(this.blendShapeIndices[key] !== undefined) {  // Get index from cached blendShapeIndices
+                  object.morphTargetInfluences[this.blendShapeIndices[key]] = value;
+                } else {
+                  if(!missingBlendshapeCounts[key]) {
+                    missingBlendshapeCounts[key] = 0;
+                  }
+                  missingBlendshapeCounts[key]++;
+                  console.warn(`Blendshape '${key}' not found in avatar dictionary. Occurred ${missingBlendshapeCounts[key]} times.`);
                 }
-    
-                // Only apply viseme if it exists in the morph target dictionary
-                const morphTargetIndex = object.morphTargetDictionary[morphTargetName];
-                if (morphTargetIndex !== undefined) {
-                    const from = { influence: object.morphTargetInfluences[morphTargetIndex] };
-                    const to = { influence: 1 };
-                    const tween = new Tween.Tween(from)
-                        .to(to, viseme.audioOffset) // Adjust duration as needed
-                        .easing(Tween.Easing.Quadratic.InOut)
-                        .onUpdate(() => {
-                            object.morphTargetInfluences[morphTargetIndex] = from.influence;
-                        })
-                        .start(); // Start the Tween
-                }
+              });
             }
-        });
+          });
+      }
+      
+    
+    renderScene() {
+        const delta = this.clock.getDelta();
+        if (this.mixer) {
+            this.mixer.update(delta);
+        }
+    
+        // Update Tweens
+        Tween.update();
+    
+        this.renderer.render(this.scene, this.camera);
     }
-    
-    
-    
-    
-renderScene(){
-    const delta = this.clock.getDelta();
-    if (this.mixer) {
-        this.mixer.update(delta);
-    }
-
-    // Update Tweens
-    Tween.update();
-
-    // Render the scene
-    this.renderer.render(this.scene, this.camera)
-}
-
     loadGLTF(url) {
         return new Promise((resolve) => {
           const loader = new GLTFLoader()
@@ -208,19 +287,7 @@ renderScene(){
         })
     }
 
-     object3DChildNames = (object, name, {recursive = false}={}) =>{
-        if(!recursive){
-            return Object.children.find(child => child.name === name);
-        }
-        for(const child of object.children){
-            if(child.name === name) return child;
-            if(child.children.length > 0){
-                const found = this.object3DChildNames(child, name, {recursive});
-                if(found) return found;
-            }
-        }
-        return undefined
-    }
+  
     render=()=>(
         <div
             ref={this.mainViewRef}
