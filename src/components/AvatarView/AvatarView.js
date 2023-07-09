@@ -4,7 +4,6 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import * as Tween from '@tweenjs/tween.js';
-import MorphTargetAnimator from './MorphTargetAnimator.js';
 
 import {io} from 'socket.io-client';
 const navigationBarHeight = 100
@@ -162,7 +161,7 @@ export class AvatarView extends React.Component{
         
     }
     async loadModel() {
-        const gltf = await this.loadGLTF(this.props.avatarUrl + '?morphTargets=ARKit')
+        const gltf = await this.loadGLTF(this.props.avatarUrl + '?morphTargets=mouthOpen, mouthSmile, eyesClosed, eyesLookUp, eyesLookDown,ARKit')
         this.avatar = gltf.scene.children[0];
         this.mixer = new THREE.AnimationMixer(this.avatar);
     
@@ -215,46 +214,69 @@ export class AvatarView extends React.Component{
         }
     }
     handleVisemeReceived = (visemeData) => {
-        console.log('received viseme');
-        const animationObject = this.parseAnimationJson(visemeData.animation);
-
-        if (animationObject === null) {
-            return;
-        }
-
-        const audioOffsetInMs = visemeData.audioOffset / 100000 ;
-
-        animationObject.BlendShapes.forEach((blendShapeFrame, index) => {
-            const delay = audioOffsetInMs + index * frameDelayInMs;
-
-            // ADJUSTED: Pass the audio reference to animateViseme
-            setTimeout(() => this.animateViseme(blendShapeFrame, this.audio), delay);
-        });
-    }
-
-    animateViseme(blendShapeFrame) {
-        
-        let missingBlendshapeCounts = {};
-
-        // Traverse avatar object
-        this.avatar.traverse((object) => {
-            if (object.isMesh && object.morphTargetDictionary) {
-              blendShapeFrame.forEach((value, index) => {
-                const key = blendShapeKeysARKit[index];  // Get key from ARKit
-      
-                if(this.blendShapeIndices[key] !== undefined) {  // Get index from cached blendShapeIndices
-                  object.morphTargetInfluences[this.blendShapeIndices[key]] = value;
-                } else {
-                  if(!missingBlendshapeCounts[key]) {
-                    missingBlendshapeCounts[key] = 0;
-                  }
-                  missingBlendshapeCounts[key]++;
-                  console.warn(`Blendshape '${key}' not found in avatar dictionary. Occurred ${missingBlendshapeCounts[key]} times.`);
-                }
-              });
-            }
-          });
+      console.log('received viseme');
+      const animationObject = this.parseAnimationJson(visemeData.animation);
+      if (animationObject === null) {
+          return;
       }
+      const audioOffsetInMs = visemeData.audioOffset / 100000;
+      const frameDelayInMs = 10000; // Adjust this value as needed
+      animationObject.BlendShapes.forEach((blendShapeFrame, index) => {
+          const delay = audioOffsetInMs + index * frameDelayInMs;
+          setTimeout(() => this.animateViseme(blendShapeFrame), delay);
+      });
+  }
+  
+  animateViseme(blendShapeFrame) {
+    const tweenDuration = 130; // Duration of the blend shape transition (in milliseconds)
+    const targetInfluences = []; // Array to store the target blend shape influences
+  
+    // Traverse the avatar object
+    this.avatar.traverse((object) => {
+      if (object.isMesh && object.morphTargetDictionary) {
+        // Iterate through the blendShapeFrame array
+        blendShapeFrame.forEach((value, index) => {
+          // Get key from ARKit
+          const key = blendShapeKeysARKit[index];
+  
+          // Check if the key exists in the avatar's morphTargetDictionary
+          if (this.blendShapeIndices[key] !== undefined) {
+            // Get index from cached blendShapeIndices
+            const targetIndex = this.blendShapeIndices[key];
+            // Get the current influence value for the blend shape
+            const currentInfluence = object.morphTargetInfluences[targetIndex];
+  
+            // Create a target influence object to be tweened
+            const targetInfluence = { value: currentInfluence };
+  
+            // Create a tween to gradually transition between the current influence and the target influence
+            new Tween.Tween(targetInfluence)
+              .to({ value: value }, tweenDuration)
+              .easing(Tween.Easing.Quadratic.Out)
+              .onUpdate(() => {
+                // Update the blend shape influence during the tween
+                object.morphTargetInfluences[targetIndex] = targetInfluence.value;
+              })
+              .start();
+  
+            // Store the target influence object in the targetInfluences array
+            targetInfluences.push(targetInfluence);
+          } else {
+            console.warn(`Blendshape '${key}' not found in avatar dictionary.`);
+          }
+        });
+      }
+    });
+  
+    // Start the TWEEN animation loop
+    function animate() {
+      if (targetInfluences.length > 0) {
+        requestAnimationFrame(animate);
+        Tween.update();
+      }
+    }
+    animate();
+  }
       
     
     renderScene() {
