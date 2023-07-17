@@ -13,7 +13,7 @@ React application that imitates a virtual chat with a 3D Ready Player Me avatar 
 - Utlizes Blendshapes animations and audio offset objects provided by Microsoft-speech-sdk to drive Lib-Sync animations.
 
 ## Back-end project:
-Please review the back-end component of this project at [Link].
+Please review the back-end component of this project at <a href="https://github.com/3bdrahman/ava_backend"> here </a>.
 
 ## Prerequisites 
 - To run the project, ensure to clone and follow steps for back-end project.
