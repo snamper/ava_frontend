@@ -1,5 +1,9 @@
 # AvatarView Project
-React application that imitates a virtual chat with a 3D Ready Player Me avatar (RPM).
+React application that imitates a virtual chat with a 3D Ready Player Me avatar (RPM) with help of the following APIs:
+- Openai Whisper API: transcription of audio recording
+- Openai ChatGPT API:  genrative AI responses to transcribed text
+- Microsoft-speeh-SDK: audio synthesis & viweme data for animation
+- Ready Player Me FrameAPI: 3D avatars & Audio-to-Face animations
 
 ## Features
 - Accepts audio using React Media Recorder
