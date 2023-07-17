@@ -24,7 +24,7 @@ Please review the back-end component of this project at [Link].
 Follow these steps to get the project running locally:
 1. Creat project directory that will contain both front-end and back-end projects.
 2. Clone the front-end project after clonning back-end project.
-   \n`git clone https://github.com/3bdrahman/ava_frontend.git`.
+   /n`git clone https://github.com/3bdrahman/ava_frontend.git`.
 3. run `npm install` in both project folders back-end and front-end.
 4. refer to back-end documentation regarding environment variables / API keys.
 5. inside back-end project folder run `npm run dev`.
